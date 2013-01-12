@@ -42,6 +42,7 @@
 #include "PixelatePass.h"
 #include "PostProcessing.h"
 #include "RenderPass.h"
+#include "LUTPass.h"
 
 typedef itg::PostProcessing ofxPostProcessing;
 
