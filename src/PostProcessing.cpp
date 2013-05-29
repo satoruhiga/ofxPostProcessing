@@ -76,7 +76,7 @@ namespace itg
         glViewport(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
         
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-		
+        
         ofPushStyle();
         glPushAttrib(GL_ENABLE_BIT);
     }
@@ -100,7 +100,7 @@ namespace itg
         glViewport(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
         
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-		
+        
         ofPushStyle();
         glPushAttrib(GL_ENABLE_BIT);
     }
@@ -109,7 +109,7 @@ namespace itg
     {
         glPopAttrib();
         ofPopStyle();
-
+        
         glViewport(0, 0, ofGetWidth(), ofGetHeight());
         
         glMatrixMode(GL_PROJECTION);
@@ -151,10 +151,8 @@ namespace itg
             glScalef(1, -1, 1);
         }
         else glTranslatef(x, y, 0);
-
 		if (numPasses == 0) raw.getTextureReference().drawSubsection(0, 0, w, h, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
         else pingPong[currentReadFbo].getTextureReference().drawSubsection(0, 0, w, h, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-
         if (flip) glPopMatrix();
     }
     
