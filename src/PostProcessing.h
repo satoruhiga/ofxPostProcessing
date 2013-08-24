@@ -39,7 +39,7 @@ namespace itg
     class PostProcessing : public ofBaseDraws
     {
     public:
-        typedef shared_ptr<PostProcessing> Ptr;
+        typedef ofPtr<PostProcessing> Ptr;
         
         void init(unsigned width = ofGetWidth(), unsigned height = ofGetHeight());
         void begin();
@@ -88,6 +88,8 @@ namespace itg
         ofFbo raw;
         ofFbo pingPong[2];
         vector<RenderPass::Ptr> passes;
+		
+		ofFbo result;
 		
 		ofRectangle viewRect;
     };

@@ -39,21 +39,37 @@ namespace itg
         this->width = width;
         this->height = height;
         
-        ofFbo::Settings s;
-        s.width = ofNextPow2(width);
-        s.height = ofNextPow2(height);
-        s.textureTarget = GL_TEXTURE_2D;
-        
-        // no need to use depth for ping pongs
-        for (int i = 0; i < 2; ++i)
-        {
-            pingPong[i].allocate(s);
-        }
-        
-        s.useDepth = true;
-        s.depthStencilInternalFormat = GL_DEPTH_COMPONENT24;
-        s.depthStencilAsTexture = true;
-        raw.allocate(s);
+		{
+			// setup pingpong / raw buffer (textureTarget = GL_TEXTURE_2D)
+			ofFbo::Settings s;
+			s.width = ofNextPow2(width);
+			s.height = ofNextPow2(height);
+			s.textureTarget = GL_TEXTURE_2D;
+			
+			// no need to use depth for ping pongs
+			for (int i = 0; i < 2; ++i)
+			{
+				pingPong[i].allocate(s);
+			}
+			
+			s.useDepth = true;
+			s.depthStencilInternalFormat = GL_DEPTH_COMPONENT24;
+			s.depthStencilAsTexture = true;
+			raw.allocate(s);
+		}
+		
+		{
+			// setup result buffer (textureTarget = depend on ofGetUsingArbTex())
+			ofFbo::Settings s;
+			s.width = width;
+			s.height = height;
+			if (ofGetUsingArbTex())
+				s.textureTarget = GL_TEXTURE_RECTANGLE;
+			else
+				s.textureTarget = GL_TEXTURE_2D;
+			s.useDepth = true;
+			result.allocate(s);
+		}
         
         numPasses = 0;
         currentReadFbo = 0;
@@ -120,6 +136,26 @@ namespace itg
         
         raw.end();
         
+		{
+			// write to result fbo
+			ofPushStyle();
+			result.begin();
+			ofColor bgColor = ofGetStyle().bgColor;
+			ofClear(bgColor.r, bgColor.g, bgColor.b);
+			
+			ofSetColor(255);
+			if (numPasses == 0)
+			{
+				raw.getTextureReference().drawSubsection(0, 0, width, height, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+			}
+			else
+			{
+				pingPong[currentReadFbo].getTextureReference().drawSubsection(0, 0, width, height, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+			}
+			result.end();
+			ofPopStyle();
+		}
+		
         ofPushStyle();
         glPushAttrib(GL_ENABLE_BIT);
         glDisable(GL_LIGHTING);
@@ -151,8 +187,7 @@ namespace itg
             glScalef(1, -1, 1);
         }
         else glTranslatef(x, y, 0);
-		if (numPasses == 0) raw.getTextureReference().drawSubsection(0, 0, w, h, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-        else pingPong[currentReadFbo].getTextureReference().drawSubsection(0, 0, w, h, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+		result.draw(0, 0, w, h);
         if (flip) glPopMatrix();
     }
     
