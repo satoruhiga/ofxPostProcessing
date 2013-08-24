@@ -1,7 +1,7 @@
 /*
  *  LUTPass.cpp
  *
- *  Copyright (c) 2012, Neil Mendoza, http://www.neilmendoza.com
+ *  Copyright (c) 2012, Satoru Higa, http://www.satoruhiga.com
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
