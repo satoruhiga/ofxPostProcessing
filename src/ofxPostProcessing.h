@@ -43,6 +43,12 @@
 #include "PostProcessing.h"
 #include "RenderPass.h"
 #include "LUTPass.h"
+#include "ContrastPass.h"
+#include "SSAOPass.h"
+#include "HorizontalTiltShifPass.h"
+#include "VerticalTiltShifPass.h"
+#include "RGBShiftPass.h"
+#include "FakeSSSPass.h"
 
 typedef itg::PostProcessing ofxPostProcessing;
 
