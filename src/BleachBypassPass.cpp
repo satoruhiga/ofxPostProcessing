@@ -1,5 +1,5 @@
 /*
- *  HorizontalTiltShifPass.cpp
+ *  BleachBypassPass.cpp
  *
  *  Copyright (c) 2013, satcy, http://satcy.net
  *  All rights reserved. 
@@ -29,54 +29,56 @@
  *  POSSIBILITY OF SUCH DAMAGE. 
  *
  */
-#include "HorizontalTiltShifPass.h"
+#include "BleachBypassPass.h"
+#include "ofMain.h"
 
 namespace itg
 {
-    HorizontalTiltShifPass::HorizontalTiltShifPass(const ofVec2f& aspect) :
-        RenderPass(aspect, "horizontaltiltshift"), h(2.0/512.0), r(0.5)
+    BleachBypassPass::BleachBypassPass(const ofVec2f& aspect, float opacity) :
+        opacity(opacity), RenderPass(aspect, "bleachbypass")
     {
+        
         string fragShaderSrc = STRINGIFY(
-             uniform sampler2D tDiffuse;
-             uniform float h;
-             uniform float r;
-             
-             void main() {
-                 vec2 vUv = gl_TexCoord[0].st;
-                 vec4 sum = vec4( 0.0 );
-                 
-                 float hh = h * abs( r - vUv.y );
-                 
-                 sum += texture2D( tDiffuse, vec2( vUv.x - 4.0 * hh, vUv.y ) ) * 0.051;
-                 sum += texture2D( tDiffuse, vec2( vUv.x - 3.0 * hh, vUv.y ) ) * 0.0918;
-                 sum += texture2D( tDiffuse, vec2( vUv.x - 2.0 * hh, vUv.y ) ) * 0.12245;
-                 sum += texture2D( tDiffuse, vec2( vUv.x - 1.0 * hh, vUv.y ) ) * 0.1531;
-                 sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y ) ) * 0.1633;
-                 sum += texture2D( tDiffuse, vec2( vUv.x + 1.0 * hh, vUv.y ) ) * 0.1531;
-                 sum += texture2D( tDiffuse, vec2( vUv.x + 2.0 * hh, vUv.y ) ) * 0.12245;
-                 sum += texture2D( tDiffuse, vec2( vUv.x + 3.0 * hh, vUv.y ) ) * 0.0918;
-                 sum += texture2D( tDiffuse, vec2( vUv.x + 4.0 * hh, vUv.y ) ) * 0.051;
-                 
-                 gl_FragColor = sum;
-             }
+                                         uniform float opacity;
+                                         uniform sampler2D tDiffuse;
+                                         void main() {
+                                             vec2 vUv = gl_TexCoord[0].st;
+                                             vec4 base = texture2D( tDiffuse, vUv );
+                                             
+                                             vec3 lumCoeff = vec3( 0.25, 0.65, 0.1 );
+                                             float lum = dot( lumCoeff, base.rgb );
+                                             vec3 blend = vec3( lum );
+                                             
+                                             float L = min( 1.0, max( 0.0, 10.0 * ( lum - 0.45 ) ) );
+                                             
+                                             vec3 result1 = 2.0 * base.rgb * blend;
+                                             vec3 result2 = 1.0 - 2.0 * ( 1.0 - blend ) * ( 1.0 - base.rgb );
+                                             
+                                             vec3 newColor = mix( result1, result2, L );
+                                             
+                                             float A2 = opacity * base.a;
+                                             vec3 mixRGB = A2 * newColor.rgb;
+                                             mixRGB += ( ( 1.0 - A2 ) * base.rgb );
+                                             
+                                             gl_FragColor = vec4( mixRGB, base.a );
+                                             
+                                         }
         );
         
         shader.setupShaderFromSource(GL_FRAGMENT_SHADER, fragShaderSrc);
         shader.linkProgram();
-#ifdef _ITG_TWEAKABLE
-        addParameter("f", this->h, "min=0 max=1");
-        addParameter("r", this->r, "min=0 max=1");
-#endif
+        
     }
     
-    void HorizontalTiltShifPass::render(ofFbo& readFbo, ofFbo& writeFbo)
+    void BleachBypassPass::render(ofFbo& readFbo, ofFbo& writeFbo, ofTexture& depthTex)
     {
         writeFbo.begin();
         
+        
         shader.begin();
+        
         shader.setUniformTexture("tDiffuse", readFbo.getTextureReference(), 0);
-        shader.setUniform1f("h", h);
-        shader.setUniform1f("r", r);
+        shader.setUniform1f("opacity", opacity);
         
         texturedQuad(0, 0, writeFbo.getWidth(), writeFbo.getHeight());
         
